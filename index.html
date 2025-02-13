@@ -1,48 +1,184 @@
-<script>
-    function getIP() {
-        let ipInfoDiv = document.getElementById("ip-info");
-        let loggingUrl = "YOUR_GOOGLE_APPS_SCRIPT_URL"; // Replace with your Web App URL
-        ipInfoDiv.innerHTML = "<p>Loading...</p>";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IP Address & Location Tracker</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
 
-        fetch('https://api64.ipify.org?format=json')
-        .then(response => response.json())
-        .then(data => {
-            let ip = data.ip;
-            return fetch(`https://ipapi.co/${ip}/json/`);
-        })
-        .then(response => response.json())
-        .then(data => {
-            let ipDetails = {
-                ip: data.ip,
-                city: data.city,
-                region: data.region,
-                country: data.country_name,
-                isp: data.org,
-                latitude: data.latitude,
-                longitude: data.longitude
-            };
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
 
-            // Display details
-            ipInfoDiv.innerHTML = `
-                <h3>IP Address: ${ipDetails.ip}</h3>
-                <p><strong>City:</strong> ${ipDetails.city}</p>
-                <p><strong>Region:</strong> ${ipDetails.region}</p>
-                <p><strong>Country:</strong> ${ipDetails.country}</p>
-                <p><strong>ISP:</strong> ${ipDetails.isp}</p>
-                <p><strong>Latitude:</strong> ${ipDetails.latitude}</p>
-                <p><strong>Longitude:</strong> ${ipDetails.longitude}</p>
-            `;
+        body {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            color: #fff;
+            text-align: center;
+            padding: 20px;
+        }
 
-            // Send data to Google Sheets
-            fetch(loggingUrl, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(ipDetails)
+        .container {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+            transition: 0.3s;
+        }
+
+        h2 {
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        button {
+            background: #ff9800;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 30px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s;
+            margin: 15px 0;
+        }
+
+        button:hover {
+            background: #ffb74d;
+            transform: scale(1.05);
+        }
+
+        .ip-box {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 15px;
+            margin-top: 15px;
+            text-align: left;
+        }
+
+        .ip-box h3 {
+            color: #ff9800;
+            margin-bottom: 5px;
+        }
+
+        .ip-box p {
+            font-size: 14px;
+            color: #ddd;
+        }
+
+        .loading {
+            display: none;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            border: 3px solid #fff;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 8px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        hr {
+            border: 0;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.3);
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Your IP Address & Location</h2>
+        <button onclick="getIP()">Find My Location</button>
+        <p class="loading" id="loading">Fetching details <span class="spinner"></span></p>
+        <div id="ip-info"></div>
+    </div>
+
+    <script>
+        function getIP() {
+            let ipInfoDiv = document.getElementById("ip-info");
+            let loading = document.getElementById("loading");
+            ipInfoDiv.innerHTML = "";
+            loading.style.display = "block";
+
+            let ipv4, ipv6;
+
+            // Fetch IPv4 Address
+            fetch('https://api.ipify.org?format=json')
+            .then(response => response.json())
+            .then(data => {
+                ipv4 = data.ip;
+                return fetch(`https://ipapi.co/${ipv4}/json/`);
+            })
+            .then(response => response.json())
+            .then(data => {
+                let ipv4Details = `
+                    <div class="ip-box">
+                        <h3>IPv4 Address: ${ipv4}</h3>
+                        <p><strong>City:</strong> ${data.city}</p>
+                        <p><strong>Region:</strong> ${data.region}</p>
+                        <p><strong>Country:</strong> ${data.country_name}</p>
+                        <p><strong>ISP:</strong> ${data.org}</p>
+                        <p><strong>Latitude:</strong> ${data.latitude}</p>
+                        <p><strong>Longitude:</strong> ${data.longitude}</p>
+                    </div>
+                    <hr>
+                `;
+
+                ipInfoDiv.innerHTML = ipv4Details;
+            })
+            .catch(() => ipInfoDiv.innerHTML = "<p>Error fetching IPv4 details!</p>");
+
+            // Fetch IPv6 Address
+            fetch('https://api64.ipify.org?format=json')
+            .then(response => response.json())
+            .then(data => {
+                ipv6 = data.ip;
+                return fetch(`https://ipapi.co/${ipv6}/json/`);
+            })
+            .then(response => response.json())
+            .then(data => {
+                let ipv6Details = `
+                    <div class="ip-box">
+                        <h3>IPv6 Address: ${ipv6}</h3>
+                        <p><strong>City:</strong> ${data.city}</p>
+                        <p><strong>Region:</strong> ${data.region}</p>
+                        <p><strong>Country:</strong> ${data.country_name}</p>
+                        <p><strong>ISP:</strong> ${data.org}</p>
+                        <p><strong>Latitude:</strong> ${data.latitude}</p>
+                        <p><strong>Longitude:</strong> ${data.longitude}</p>
+                    </div>
+                `;
+
+                ipInfoDiv.innerHTML += ipv6Details;
+                loading.style.display = "none";
+            })
+            .catch(() => {
+                ipInfoDiv.innerHTML += "<p>Error fetching IPv6 details!</p>";
+                loading.style.display = "none";
             });
-
-        })
-        .catch(() => ipInfoDiv.innerHTML = "Error fetching details!");
-    }
-</script>
+        }
+    </script>
+</body>
+</html>
