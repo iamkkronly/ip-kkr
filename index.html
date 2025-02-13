@@ -26,22 +26,32 @@
 
     <script>
         function getIP() {
-            fetch('https://ipapi.co/json/')
+            let ipInfoDiv = document.getElementById("ip-info");
+            ipInfoDiv.innerHTML = "<p>Loading...</p>";
+
+            // Fetch IPv4 Address
+            fetch('https://api64.ipify.org?format=json')
             .then(response => response.json())
             .then(data => {
-                document.getElementById("ip-info").innerHTML = `
-                    <h3>IP Address: ${data.ip}</h3>
-                    <p><strong>City:</strong> ${data.city}</p>
-                    <p><strong>Region:</strong> ${data.region}</p>
-                    <p><strong>Country:</strong> ${data.country_name}</p>
-                    <p><strong>ISP:</strong> ${data.org}</p>
-                    <p><strong>Latitude:</strong> ${data.latitude}</p>
-                    <p><strong>Longitude:</strong> ${data.longitude}</p>
-                `;
+                let ip = data.ip;
+                
+                // Fetch Location Details
+                fetch(`https://ipapi.co/${ip}/json/`)
+                .then(response => response.json())
+                .then(data => {
+                    ipInfoDiv.innerHTML = `
+                        <h3>IPv4/IPv6 Address: ${ip}</h3>
+                        <p><strong>City:</strong> ${data.city}</p>
+                        <p><strong>Region:</strong> ${data.region}</p>
+                        <p><strong>Country:</strong> ${data.country_name}</p>
+                        <p><strong>ISP:</strong> ${data.org}</p>
+                        <p><strong>Latitude:</strong> ${data.latitude}</p>
+                        <p><strong>Longitude:</strong> ${data.longitude}</p>
+                    `;
+                })
+                .catch(() => ipInfoDiv.innerHTML = "Error fetching location details!");
             })
-            .catch(error => {
-                document.getElementById("ip-info").innerHTML = "Error fetching IP details!";
-            });
+            .catch(() => ipInfoDiv.innerHTML = "Error fetching IP address!");
         }
     </script>
 </body>
