@@ -6,52 +6,138 @@
     <title>My IP Address Location</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Poppins', sans-serif;
             text-align: center;
-            margin: 50px;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 0;
         }
-        #ip-info {
+        .container {
+            margin: 50px auto;
+            width: 90%;
+            max-width: 600px;
+            background: white;
             padding: 20px;
-            background: #f4f4f4;
             border-radius: 10px;
-            display: inline-block;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            color: #333;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: 0.3s;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .ip-box {
             margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            text-align: left;
+        }
+        .ip-box h3 {
+            margin: 0;
+            color: #007bff;
+        }
+        .ip-box p {
+            margin: 5px 0;
+            font-size: 14px;
+            color: #555;
+        }
+        .loading {
+            margin-top: 20px;
+            font-size: 16px;
+            color: #777;
+            display: none;
+        }
+        hr {
+            border: 0;
+            height: 1px;
+            background: #ddd;
+            margin: 15px 0;
         }
     </style>
 </head>
 <body>
-    <h2>Your IP Address Location</h2>
-    <button onclick="getIP()">Find My Location</button>
-    <div id="ip-info"></div>
+    <div class="container">
+        <h2>Your IP Address & Location</h2>
+        <button onclick="getIP()">Find My Location</button>
+        <p class="loading" id="loading">Fetching details...</p>
+        <div id="ip-info"></div>
+    </div>
 
     <script>
         function getIP() {
             let ipInfoDiv = document.getElementById("ip-info");
-            ipInfoDiv.innerHTML = "<p>Loading...</p>";
+            let loading = document.getElementById("loading");
+            ipInfoDiv.innerHTML = "";
+            loading.style.display = "block";
+
+            let ipv4, ipv6;
 
             // Fetch IPv4 Address
-            fetch('https://api64.ipify.org?format=json')
+            fetch('https://api.ipify.org?format=json')
             .then(response => response.json())
             .then(data => {
-                let ip = data.ip;
-                
-                // Fetch Location Details
-                fetch(`https://ipapi.co/${ip}/json/`)
-                .then(response => response.json())
-                .then(data => {
-                    ipInfoDiv.innerHTML = `
-                        <h3>IPv4/IPv6 Address: ${ip}</h3>
+                ipv4 = data.ip;
+                return fetch(`https://ipapi.co/${ipv4}/json/`);
+            })
+            .then(response => response.json())
+            .then(data => {
+                let ipv4Details = `
+                    <div class="ip-box">
+                        <h3>IPv4 Address: ${ipv4}</h3>
                         <p><strong>City:</strong> ${data.city}</p>
                         <p><strong>Region:</strong> ${data.region}</p>
                         <p><strong>Country:</strong> ${data.country_name}</p>
                         <p><strong>ISP:</strong> ${data.org}</p>
                         <p><strong>Latitude:</strong> ${data.latitude}</p>
                         <p><strong>Longitude:</strong> ${data.longitude}</p>
-                    `;
-                })
-                .catch(() => ipInfoDiv.innerHTML = "Error fetching location details!");
+                    </div>
+                    <hr>
+                `;
+
+                ipInfoDiv.innerHTML = ipv4Details;
             })
-            .catch(() => ipInfoDiv.innerHTML = "Error fetching IP address!");
+            .catch(() => ipInfoDiv.innerHTML = "<p>Error fetching IPv4 details!</p>");
+
+            // Fetch IPv6 Address
+            fetch('https://api64.ipify.org?format=json')
+            .then(response => response.json())
+            .then(data => {
+                ipv6 = data.ip;
+                return fetch(`https://ipapi.co/${ipv6}/json/`);
+            })
+            .then(response => response.json())
+            .then(data => {
+                let ipv6Details = `
+                    <div class="ip-box">
+                        <h3>IPv6 Address: ${ipv6}</h3>
+                        <p><strong>City:</strong> ${data.city}</p>
+                        <p><strong>Region:</strong> ${data.region}</p>
+                        <p><strong>Country:</strong> ${data.country_name}</p>
+                        <p><strong>ISP:</strong> ${data.org}</p>
+                        <p><strong>Latitude:</strong> ${data.latitude}</p>
+                        <p><strong>Longitude:</strong> ${data.longitude}</p>
+                    </div>
+                `;
+
+                ipInfoDiv.innerHTML += ipv6Details;
+                loading.style.display = "none";
+            })
+            .catch(() => {
+                ipInfoDiv.innerHTML += "<p>Error fetching IPv6 details!</p>";
+                loading.style.display = "none";
+            });
         }
     </script>
 </body>
