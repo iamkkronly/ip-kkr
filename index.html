@@ -1,120 +1,48 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My IP Address Location</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            background-color: #f4f4f4;
-            padding: 20px;
-        }
-        .container {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-            max-width: 600px;
-            margin: auto;
-        }
-        button {
-            background: #007bff;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        button:hover {
-            background: #0056b3;
-        }
-        .ip-box {
-            margin-top: 20px;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 8px;
-            text-align: left;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h2>Your IP Address & Location</h2>
-        <button onclick="getIP()">Find My Location</button>
-        <div id="ip-info"></div>
-    </div>
+<script>
+    function getIP() {
+        let ipInfoDiv = document.getElementById("ip-info");
+        let loggingUrl = "YOUR_GOOGLE_APPS_SCRIPT_URL"; // Replace with your Web App URL
+        ipInfoDiv.innerHTML = "<p>Loading...</p>";
 
-    <script>
-        function getIP() {
-            let ipInfoDiv = document.getElementById("ip-info");
-            ipInfoDiv.innerHTML = "<p>Fetching IP...</p>";
+        fetch('https://api64.ipify.org?format=json')
+        .then(response => response.json())
+        .then(data => {
+            let ip = data.ip;
+            return fetch(`https://ipapi.co/${ip}/json/`);
+        })
+        .then(response => response.json())
+        .then(data => {
+            let ipDetails = {
+                ip: data.ip,
+                city: data.city,
+                region: data.region,
+                country: data.country_name,
+                isp: data.org,
+                latitude: data.latitude,
+                longitude: data.longitude
+            };
 
-            let ipv4, ipv6;
+            // Display details
+            ipInfoDiv.innerHTML = `
+                <h3>IP Address: ${ipDetails.ip}</h3>
+                <p><strong>City:</strong> ${ipDetails.city}</p>
+                <p><strong>Region:</strong> ${ipDetails.region}</p>
+                <p><strong>Country:</strong> ${ipDetails.country}</p>
+                <p><strong>ISP:</strong> ${ipDetails.isp}</p>
+                <p><strong>Latitude:</strong> ${ipDetails.latitude}</p>
+                <p><strong>Longitude:</strong> ${ipDetails.longitude}</p>
+            `;
 
-            // Fetch IPv4
-            fetch('https://api.ipify.org?format=json')
-            .then(response => response.json())
-            .then(data => {
-                ipv4 = data.ip;
-                return fetch(`https://ipapi.co/${ipv4}/json/`);
-            })
-            .then(response => response.json())
-            .then(data => {
-                let ipv4Details = `
-                    <div class="ip-box">
-                        <h3>IPv4 Address: ${ipv4}</h3>
-                        <p><strong>City:</strong> ${data.city}</p>
-                        <p><strong>Region:</strong> ${data.region}</p>
-                        <p><strong>Country:</strong> ${data.country_name}</p>
-                        <p><strong>ISP:</strong> ${data.org}</p>
-                        <p><strong>Latitude:</strong> ${data.latitude}</p>
-                        <p><strong>Longitude:</strong> ${data.longitude}</p>
-                    </div>
-                    <hr>
-                `;
-
-                ipInfoDiv.innerHTML = ipv4Details;
-                sendToGoogleDocs(ipv4, data.city, data.region, data.country_name, data.org, data.latitude, data.longitude, "IPv4");
-            })
-            .catch(() => ipInfoDiv.innerHTML = "<p>Error fetching IPv4 details!</p>");
-
-            // Fetch IPv6
-            fetch('https://api64.ipify.org?format=json')
-            .then(response => response.json())
-            .then(data => {
-                ipv6 = data.ip;
-                return fetch(`https://ipapi.co/${ipv6}/json/`);
-            })
-            .then(response => response.json())
-            .then(data => {
-                let ipv6Details = `
-                    <div class="ip-box">
-                        <h3>IPv6 Address: ${ipv6}</h3>
-                        <p><strong>City:</strong> ${data.city}</p>
-                        <p><strong>Region:</strong> ${data.region}</p>
-                        <p><strong>Country:</strong> ${data.country_name}</p>
-                        <p><strong>ISP:</strong> ${data.org}</p>
-                        <p><strong>Latitude:</strong> ${data.latitude}</p>
-                        <p><strong>Longitude:</strong> ${data.longitude}</p>
-                    </div>
-                `;
-
-                ipInfoDiv.innerHTML += ipv6Details;
-                sendToGoogleDocs(ipv6, data.city, data.region, data.country_name, data.org, data.latitude, data.longitude, "IPv6");
-            })
-            .catch(() => ipInfoDiv.innerHTML += "<p>Error fetching IPv6 details!</p>");
-        }
-
-        function sendToGoogleDocs(ip, city, region, country, isp, lat, lon, version) {
-            fetch("YOUR_WEB_APP_URL", {
+            // Send data to Google Sheets
+            fetch(loggingUrl, {
                 method: "POST",
-                mode: "no-cors",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ ip, city, region, country, isp, lat, lon, version })
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(ipDetails)
             });
-        }
-    </script>
-</body>
-</html>
+
+        })
+        .catch(() => ipInfoDiv.innerHTML = "Error fetching details!");
+    }
+</script>
