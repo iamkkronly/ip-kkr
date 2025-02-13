@@ -122,61 +122,47 @@
             ipInfoDiv.innerHTML = "";
             loading.style.display = "block";
 
-            let ipv4, ipv6;
+            Promise.all([
+                fetch('https://api64.ipify.org?format=json').then(response => response.json()), // Fetch IPv6
+                fetch('https://api.ipify.org?format=json').then(response => response.json())  // Fetch IPv4
+            ])
+            .then(([ipv6Data, ipv4Data]) => {
+                let ipv6 = ipv6Data.ip;
+                let ipv4 = ipv4Data.ip;
 
-            // Fetch IPv4 Address
-            fetch('https://api.ipify.org?format=json')
-            .then(response => response.json())
-            .then(data => {
-                ipv4 = data.ip;
-                return fetch(`https://ipapi.co/${ipv4}/json/`);
+                return Promise.all([
+                    fetch(`https://ipapi.co/${ipv6}/json/`).then(response => response.json()),
+                    fetch(`https://ipapi.co/${ipv4}/json/`).then(response => response.json())
+                ])
+                .then(([ipv6Details, ipv4Details]) => {
+                    ipInfoDiv.innerHTML = `
+                        <div class="ip-box">
+                            <h3>IPv4 Address: ${ipv4}</h3>
+                            <p><strong>City:</strong> ${ipv4Details.city}</p>
+                            <p><strong>Region:</strong> ${ipv4Details.region}</p>
+                            <p><strong>Country:</strong> ${ipv4Details.country_name}</p>
+                            <p><strong>ISP:</strong> ${ipv4Details.org}</p>
+                            <p><strong>Latitude:</strong> ${ipv4Details.latitude}</p>
+                            <p><strong>Longitude:</strong> ${ipv4Details.longitude}</p>
+                        </div>
+                        <hr>
+                        <div class="ip-box">
+                            <h3>IPv6 Address: ${ipv6}</h3>
+                            <p><strong>City:</strong> ${ipv6Details.city}</p>
+                            <p><strong>Region:</strong> ${ipv6Details.region}</p>
+                            <p><strong>Country:</strong> ${ipv6Details.country_name}</p>
+                            <p><strong>ISP:</strong> ${ipv6Details.org}</p>
+                            <p><strong>Latitude:</strong> ${ipv6Details.latitude}</p>
+                            <p><strong>Longitude:</strong> ${ipv6Details.longitude}</p>
+                        </div>
+                    `;
+                    loading.style.display = "none";
+                });
             })
-            .then(response => response.json())
-            .then(data => {
-                let ipv4Details = `
-                    <div class="ip-box">
-                        <h3>IPv4 Address: ${ipv4}</h3>
-                        <p><strong>City:</strong> ${data.city}</p>
-                        <p><strong>Region:</strong> ${data.region}</p>
-                        <p><strong>Country:</strong> ${data.country_name}</p>
-                        <p><strong>ISP:</strong> ${data.org}</p>
-                        <p><strong>Latitude:</strong> ${data.latitude}</p>
-                        <p><strong>Longitude:</strong> ${data.longitude}</p>
-                    </div>
-                    <hr>
-                `;
-
-                ipInfoDiv.innerHTML = ipv4Details;
-            })
-            .catch(() => ipInfoDiv.innerHTML = "<p>Error fetching IPv4 details!</p>");
-
-            // Fetch IPv6 Address
-            fetch('https://api64.ipify.org?format=json')
-            .then(response => response.json())
-            .then(data => {
-                ipv6 = data.ip;
-                return fetch(`https://ipapi.co/${ipv6}/json/`);
-            })
-            .then(response => response.json())
-            .then(data => {
-                let ipv6Details = `
-                    <div class="ip-box">
-                        <h3>IPv6 Address: ${ipv6}</h3>
-                        <p><strong>City:</strong> ${data.city}</p>
-                        <p><strong>Region:</strong> ${data.region}</p>
-                        <p><strong>Country:</strong> ${data.country_name}</p>
-                        <p><strong>ISP:</strong> ${data.org}</p>
-                        <p><strong>Latitude:</strong> ${data.latitude}</p>
-                        <p><strong>Longitude:</strong> ${data.longitude}</p>
-                    </div>
-                `;
-
-                ipInfoDiv.innerHTML += ipv6Details;
+            .catch(error => {
+                ipInfoDiv.innerHTML = "<p>Error fetching IP details. Please try again.</p>";
                 loading.style.display = "none";
-            })
-            .catch(() => {
-                ipInfoDiv.innerHTML += "<p>Error fetching IPv6 details!</p>";
-                loading.style.display = "none";
+                console.error("Error fetching IP data:", error);
             });
         }
     </script>
