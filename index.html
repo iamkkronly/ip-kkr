@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My IP Address Location</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 50px;
+        }
+        #ip-info {
+            padding: 20px;
+            background: #f4f4f4;
+            border-radius: 10px;
+            display: inline-block;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h2>Your IP Address Location</h2>
+    <button onclick="getIP()">Find My Location</button>
+    <div id="ip-info"></div>
+
+    <script>
+        function getIP() {
+            fetch('https://ipapi.co/json/')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("ip-info").innerHTML = `
+                    <h3>IP Address: ${data.ip}</h3>
+                    <p><strong>City:</strong> ${data.city}</p>
+                    <p><strong>Region:</strong> ${data.region}</p>
+                    <p><strong>Country:</strong> ${data.country_name}</p>
+                    <p><strong>ISP:</strong> ${data.org}</p>
+                    <p><strong>Latitude:</strong> ${data.latitude}</p>
+                    <p><strong>Longitude:</strong> ${data.longitude}</p>
+                `;
+            })
+            .catch(error => {
+                document.getElementById("ip-info").innerHTML = "Error fetching IP details!";
+            });
+        }
+    </script>
+</body>
+</html>
